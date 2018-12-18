@@ -2,7 +2,7 @@ import DataFile
 import ArgLib
 import Constants
 
-import dbm
+import dbm.ndbm
 import pickle
 import numpy as np
 from collections import defaultdict
@@ -87,7 +87,7 @@ codonDict = {
 # mapping onto antisense strand, includes N:N to map undetermined nucleotides onto undetermined nucleotides
 antisenseMap = {'A': 'T', 'G': 'C', 'C': 'G', 'T': 'A', 'N': 'N'}
 
-def calculateRandomMatchPeptideProbabilities(fastaFileName, pepLengths=range(5,20), ILEqual=False):
+def calculateRandomMatchPeptideProbabilities(fastaFileName, pepLengths=list(range(5,20)), ILEqual=False):
 
     probDict = {}
     numAA = 20
@@ -429,7 +429,7 @@ def writeTrueAndDecoyDB(source_fasta, outFileName, keep_fixed = ['K'], decoy_del
     for seq_name, sequence in seq_gen:
         writeSequence(outFile, seq_name, sequence, lineLength=60)
 
-    for seq_name, sequence in decoy_db.items():
+    for seq_name, sequence in list(decoy_db.items()):
         seq_name = seq_name[0] + decoy_delim + seq_name[1:]
         writeSequence(outFile, seq_name, sequence, lineLength=60)
 
@@ -450,7 +450,7 @@ def makeDBForFMIndexFromFASTA(fastaFile, outFileBase, transformLtoI = True, seqS
     indSize = 0
 
     # Initialize first index partion
-    nameDB = dbm.open(outFileBase + '.seqnames.%i'%i, 'n')
+    nameDB = dbm.ndbm.open(outFileBase + '.seqnames.%i'%i, 'n')
     offSet = 0
     outFile = open(outFileBase + '_fmFormatted.txt.%i'%i, 'w')
     offsets = []
@@ -462,14 +462,14 @@ def makeDBForFMIndexFromFASTA(fastaFile, outFileBase, transformLtoI = True, seqS
 
         indSize += len(sequence) + 1
         if indSize > maxIndexSize:
-            print('Index size %i greater than max %i, creating new index partition'%(indSize, maxIndexSize))
+            print(('Index size %i greater than max %i, creating new index partition'%(indSize, maxIndexSize)))
             nameDB.close()
             outFile.close()
             offsets_arr += [np.array(offsets, dtype=np.uint32)]
 
             i += 1
             indSize = len(sequence) + 1
-            nameDB = dbm.open(outFileBase + '.seqnames.%i'%i, 'n')
+            nameDB = dbm.ndbm.open(outFileBase + '.seqnames.%i'%i, 'n')
             offSet = 0
             outFile = open(outFileBase + '_fmFormatted.txt.%i'%i, 'w')
             offsets = []
@@ -516,7 +516,7 @@ def format_seqs_for_motifX(seqs_file, out_file_name, motif_len = 15, seq_len = 4
     if len(new_seqs) > max_size:
         print('newseqs g')
         #for i in range(min(max_num_crossvals, len(new_seqs)/float(max_size) * 2)):
-        rand_smpl = [ new_seqs[i] for i in sorted(random.sample(range(len(new_seqs)), max_size)) ]
+        rand_smpl = [ new_seqs[i] for i in sorted(random.sample(list(range(len(new_seqs))), max_size)) ]
         #out_file = open(out_file_name + str(i+1), 'w')
         out_file = open(out_file_name, 'w')
         for seq in rand_smpl:

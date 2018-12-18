@@ -39,7 +39,7 @@ def readCSV(infile,delimiter=','):
 			if header is None:
 				header = splitLine	
 				continue
-			for i in xrange(len(splitLine)):
+			for i in range(len(splitLine)):
 				data[rowCnt,header[i]] = splitLine[i]
 			rowCnt = rowCnt+1			
 	return rowCnt, data

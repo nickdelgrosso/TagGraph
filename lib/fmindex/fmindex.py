@@ -84,7 +84,7 @@ class SwigPyIterator(_object):
     def distance(self, *args): return _fmindex.SwigPyIterator_distance(self, *args)
     def equal(self, *args): return _fmindex.SwigPyIterator_equal(self, *args)
     def copy(self): return _fmindex.SwigPyIterator_copy(self)
-    def next(self): return _fmindex.SwigPyIterator_next(self)
+    def __next__(self): return _fmindex.SwigPyIterator_next(self)
     def __next__(self): return _fmindex.SwigPyIterator___next__(self)
     def previous(self): return _fmindex.SwigPyIterator_previous(self)
     def advance(self, *args): return _fmindex.SwigPyIterator_advance(self, *args)
@@ -106,7 +106,7 @@ class IntVector(_object):
     __repr__ = _swig_repr
     def iterator(self): return _fmindex.IntVector_iterator(self)
     def __iter__(self): return self.iterator()
-    def __nonzero__(self): return _fmindex.IntVector___nonzero__(self)
+    def __bool__(self): return _fmindex.IntVector___nonzero__(self)
     def __bool__(self): return _fmindex.IntVector___bool__(self)
     def __len__(self): return _fmindex.IntVector___len__(self)
     def pop(self): return _fmindex.IntVector_pop(self)

@@ -13,7 +13,7 @@ import xml.etree.ElementTree as etree
 import Constants
 import shlex
 import subprocess
-import dbm
+import dbm.ndbm
 
 
 searchprogs = ['LADS', 'SEQUEST', 'MASCOT', 'SORCERER', 'PepNovo', 'NovoHMM', 'MaxQuant', 'LuteFisk', 'X!Tandem', 'SPIDER', 'PEAKS', 'OMSSA', 'InSpect', 'pNovo', 'Combined']
@@ -29,7 +29,7 @@ def getArgs(options, argList):
             if opt != None:
                 args.extend(['--' + arg, '\"' + str(opt) + '\"'])
         except AttributeError:
-            print('AttributeError for arg %s'%arg)
+            print(('AttributeError for arg %s'%arg))
             pass
 
     return args
@@ -143,7 +143,7 @@ def combine_prot_lists_for_david():
 
         out_file.write('\t'.join(ptm_list) + '\n')
 
-    for i in range(max([len(k) for k in ptm_map.values()])):
+    for i in range(max([len(k) for k in list(ptm_map.values())])):
         ptm_vec = []
         for file in ptm_list:
             if i >= len(ptm_map[file]):
@@ -199,7 +199,7 @@ def bin_by_tissue(accum_file, out_file_name, tissue_list_col_offset, col_map, de
             for col in cols[:tissue_list_col_offset]:
                 scan_data[col] = item[col]
 
-            for col in col_map.keys():
+            for col in list(col_map.keys()):
                 scan_data[col] = vec_map[col]
 
             out_file.write(delim.join([str(scan_data[col]) for col in new_cols]) + '\n')
@@ -221,7 +221,7 @@ def transform_and_average_by_tissue(accum_file, out_file_name, tissue_list_col_o
     out_file.write(delim.join(new_cols) + '\n')
 
     exp_cols = []
-    for item in col_map.values():
+    for item in list(col_map.values()):
         exp_cols += item
 
     vecs = defaultdict(list)
@@ -249,7 +249,7 @@ def transform_and_average_by_tissue(accum_file, out_file_name, tissue_list_col_o
         write_data['%s Mean'%col] = np.mean(consolidated_data, 0)
         write_data['%s Variance'%col] = np.var(consolidated_data, 0)
 
-    for i in range(len(vecs.values()[0])):
+    for i in range(len(list(vecs.values())[0])):
         out_file.write('\t'.join(base_data[i] + [str(write_data[col][i]) for col in new_cols[tissue_list_col_offset:]]) + '\n')
 
     out_file.close()
@@ -353,7 +353,7 @@ def combine_tdv_results(program_file_map, out_file_name, base_cols = ['Dataset',
 
     all_scans = set()
     for prog in indexed_db_info:
-        for scanF in indexed_db_info[prog].keys():
+        for scanF in list(indexed_db_info[prog].keys()):
             all_scans.add(scanF)
 
     discarded = 0
@@ -380,7 +380,7 @@ def combine_tdv_results(program_file_map, out_file_name, base_cols = ['Dataset',
             print('Discarded due to disagreement')
             for prog in indexed_db_info:
                 if scan in indexed_db_info[prog]:
-                    print(indexed_db_info[prog][scan])
+                    print((indexed_db_info[prog][scan]))
 
             discarded += 1
     num_overlap = all_agree + discarded
@@ -421,7 +421,7 @@ def map_human_proteome_dbresults(em_top_results_file, human_proteome_db_results,
 
     top_results = {}
     for dataset in indexed_db:
-        top_results[dataset] = sorted( indexed_db[dataset].values(), key = lambda k: -float(k[score_key] if k[score_key] != 'None' else 0) )[:num_per_frac]
+        top_results[dataset] = sorted( list(indexed_db[dataset].values()), key = lambda k: -float(k[score_key] if k[score_key] != 'None' else 0) )[:num_per_frac]
 
     frac_map = {}
     for dataset in top_results:
@@ -435,29 +435,29 @@ def map_human_proteome_dbresults(em_top_results_file, human_proteome_db_results,
                     if item[peptide_key] == indexed_em[frac][item['ScanF']]['Context'][2:-2]:
                         frac_agree_counts[frac] += 1
         try:
-            best_frac =  sorted(frac_agree_counts.items(), key = lambda k: -k[1])[0]
+            best_frac =  sorted(list(frac_agree_counts.items()), key = lambda k: -k[1])[0]
             if best_frac[1] >= min_ratio_to_accept_mapping * len(items):
                 frac_map[dataset] = best_frac[0]
         except IndexError:
             # Happens if db fraction not present in TG data (possibly corrupted raw file or some other reason)
-            print('INDEX ERROR', frac_agree_counts)
+            print(('INDEX ERROR', frac_agree_counts))
             pass
 
-    if len(set(frac_map.values())) != len(frac_map.values()):
-        print(sorted(frac_map.items(), key = lambda k: k[1]))
+    if len(set(frac_map.values())) != len(list(frac_map.values())):
+        print((sorted(list(frac_map.items()), key = lambda k: k[1])))
         #print(em_top_results_file, human_proteome_db_results)
-        print('CRITICAL ERROR: REDUNDANT FRACTION MAPPING %s'%str( sorted(frac_map.items(), key = lambda k: k[1]) ))
+        print(('CRITICAL ERROR: REDUNDANT FRACTION MAPPING %s'%str( sorted(list(frac_map.items()), key = lambda k: k[1]) )))
 
-    if len(set(frac_map.values())) != len(indexed_em.keys()):
-        print(len(set(frac_map.values())), len(indexed_em.keys()))
-        print('CRITICAL ERROR: Number of fractions in fraction map does not match number of fractions in TAG-GRAPH results for %s %s'%(em_top_results_file, human_proteome_db_results))
+    if len(set(frac_map.values())) != len(list(indexed_em.keys())):
+        print((len(set(frac_map.values())), len(list(indexed_em.keys()))))
+        print(('CRITICAL ERROR: Number of fractions in fraction map does not match number of fractions in TAG-GRAPH results for %s %s'%(em_top_results_file, human_proteome_db_results)))
 
     # Get Summary Statistics
     total_spectra, agree, disagree, db_total, tg_total = 0, 0, 0, 0, 0
     disagree_items = []
     db_peptides, db_mod_peptides, tg_contexts, tg_mod_contexts = set(), set(), set(), set()
     for frac in indexed_em:
-        for item in indexed_em[frac].values():
+        for item in list(indexed_em[frac].values()):
             total_spectra += 1
             if float(item['EM Probability']) >= em_cut:
                 tg_total += 1
@@ -465,7 +465,7 @@ def map_human_proteome_dbresults(em_top_results_file, human_proteome_db_results,
                 tg_mod_contexts.add( (item['Context'][2:-2], eval(item['Mod Tuple'])) )
 
     for dataset in indexed_db:
-        for item in indexed_db[dataset].values():
+        for item in list(indexed_db[dataset].values()):
             db_total += 1
             db_peptides.add(item[peptide_key])
             if include_db_mods:
@@ -529,7 +529,7 @@ def getFilesFTP(ftp_url, ftp_dir, wildcard):
     ftp.cwd(ftp_dir)
 
     resp = ftp.retrlines('NLST', file_list.append)
-    print('Number of files in directory', len(file_list))
+    print(('Number of files in directory', len(file_list)))
     ftp.quit()
 
     for file in file_list:
@@ -539,7 +539,7 @@ def getFilesFTP(ftp_url, ftp_dir, wildcard):
             ftp.login()
             ftp.cwd(ftp_dir)
 
-            print('Retrieving file %s'%file)
+            print(('Retrieving file %s'%file))
             outfile = open(file, 'w')
             ftp.retrbinary("RETR " + file, outfile.write)
             outfile.close()
@@ -619,7 +619,7 @@ def PEAKS7_split_by_fraction(peaks_file, frac_map = None, first_frac = 1, delim 
             frac_map[item[scan_col].split(':')[0]] = 0
 
         if renumber_fracs:
-            frac_nums = sorted([int(frac[1:]) for frac in frac_map.keys()])
+            frac_nums = sorted([int(frac[1:]) for frac in list(frac_map.keys())])
             frac_diff = first_frac - frac_nums[0]
             for frac_num in frac_nums:
                 frac_map['F' + str(frac_num)] = open(base + '_F' + str(frac_num + frac_diff) + ext, 'w')
@@ -645,8 +645,8 @@ def combineDatafiles(data1, data2, key='ScanF', overrideKey1=None, overrideKey2=
     indexedData1 = indexDataByKey(data1, key=key, overrideKey=overrideKey1, dtyper=dtyper)
     indexedData2 = indexDataByKey(data2, key=key, overrideKey=overrideKey2, dtyper=dtyper)
 
-    cols1 = indexedData1.values()[0].keys()
-    cols2 = indexedData2.values()[0].keys()
+    cols1 = list(indexedData1.values())[0].keys()
+    cols2 = list(indexedData2.values())[0].keys()
     try:
         cols1.remove(key)
         cols2.remove(key)
@@ -680,9 +680,9 @@ def combineDatafiles(data1, data2, key='ScanF', overrideKey1=None, overrideKey2=
 def getCols(fname, skipLines = 0, delimiter=','):
     rec = csv.reader(open(fname, 'r'), delimiter=delimiter)
     for i in range(skipLines):
-        rec.next()
+        next(rec)
 
-    return rec.next()
+    return next(rec)
 
 def getGeneOntologyInfo(gene_ontology_file):
     return getScanInfo(gene_ontology_file, delimiter='\t', skipLines=12, cols = ['DB', 'Object ID', 'Gene Name', 'Qualifier', 'GO', 'GO_REF', 'Evidence Code', 'With (or) From', 'Aspect', 'DB Object Name', 'DB Object Synonym', 'DB Object Type', 'Taxon', 'Date', 'Assigned By', 'Annotation Extension', 'Gene Product Form ID'])[1]
@@ -693,11 +693,11 @@ def getScanInfo(fname, fields=None, delimiter=',', skipLines=0, cols = False):
     runInfo = []
     rec = csv.reader(open(fname, 'r'), delimiter=delimiter)
     for i in range(skipLines):
-        rec.next()
+        next(rec)
 
     # Can supply cols if sheet does not have cols listed
     if not cols:
-        cols = rec.next()
+        cols = next(rec)
 
     if not fields:
         fields = [col for col in cols]
@@ -718,7 +718,7 @@ def getScanInfo(fname, fields=None, delimiter=',', skipLines=0, cols = False):
 
 def getScanInfoIterator(fname, delimiter=','):
     rec = csv.reader(open(fname, 'r'), delimiter=delimiter)
-    cols = rec.next()
+    cols = next(rec)
 
     for row in rec:
         rowInfo = {}
@@ -789,7 +789,7 @@ def getScoringMatrix(absPath):
         line = fin.readline()
         char = line[0]
         if AAMap[char] != i:
-            print('ERROR: scoring matrix not properly formatted for AA %s' % char)
+            print(('ERROR: scoring matrix not properly formatted for AA %s' % char))
         else:
             data = line[2:]
             k = j = 0
@@ -807,12 +807,12 @@ def getScoringMatrix(absPath):
     return AAMap, matrix
 
 def getDBInfo(db, key=None):
-    db = dbm.open(db, 'r')
+    db = dbm.ndbm.open(db, 'r')
     if key:
         return pickle.loads(db[key])
     else:
         dbDict = {}
-        for key in db.keys():
+        for key in list(db.keys()):
             dbDict[key] = pickle.loads(db[key])
         return dbDict
 
@@ -824,7 +824,7 @@ def generateSeqMap(progDict, symbolMap, paramsDict):
     seqMap = {}
     for prog in progDict:
         seqMap[prog] = {'AAs':{}, 'Mods': {}}
-        for aa in Constants.origAAs.keys():
+        for aa in list(Constants.origAAs.keys()):
             seqMap[prog]['AAs'][aa] = aa
 
         if progDict[prog] != 'LADS':
@@ -835,9 +835,9 @@ def generateSeqMap(progDict, symbolMap, paramsDict):
         try:
             seqMap[prog]['AAs'].update(symbolMap[prog]['AAs'])
         except KeyError:
-            print('AAs dictionary for program %s not present in symbol map' % (prog,))
+            print(('AAs dictionary for program %s not present in symbol map' % (prog,)))
 
-    for mod in paramsDict['Diff Mods'].keys():
+    for mod in list(paramsDict['Diff Mods'].keys()):
         modType = paramsDict['Diff Mods'][mod][0]
         for prog in progDict:
             try:
@@ -850,16 +850,16 @@ def generateSeqMap(progDict, symbolMap, paramsDict):
                     # modify all amino acids with static mod
                     seqMap[prog]['AAs'][paramsDict['Diff Mods'][mod][1]] = seqMap[prog]['AAs'][paramsDict['Diff Mods'][mod][1]] + mod
             except KeyError:
-                print('Modification of type %s unaccounted for in modDict for program %s' % (modType, prog))
+                print(('Modification of type %s unaccounted for in modDict for program %s' % (modType, prog)))
 
-    for modData in paramsDict['Static Mods'].keys():
+    for modData in list(paramsDict['Static Mods'].keys()):
         modType, aa_loc = modData
         for prog in progDict:
             try:
                 progMod = symbolMap[prog]['Mods'][modType]
                 seqMap[prog]['Mods'][(progMod, aa_loc)] = ''
             except KeyError:
-                print('Modification of type %s unaccounted for in modDict for program %s' % (modType, prog))
+                print(('Modification of type %s unaccounted for in modDict for program %s' % (modType, prog)))
 
     return seqMap
 
@@ -886,7 +886,7 @@ def parseParams(fname):
             try:
                 paramsDict[section].update(paramHandler[section](datum, params.get(section, datum).split(' ')))
             except KeyError:
-                raise KeyError('%s not a valid category. Valid categories are: %s' % (section, str(paramHandler.keys())))
+                raise KeyError('%s not a valid category. Valid categories are: %s' % (section, str(list(paramHandler.keys()))))
 
     #print(paramsDict)
     paramsDict['Static AAs'] = [entry[1] for entry in paramsDict['Static Mods']]
@@ -913,7 +913,7 @@ def parseParams_v1(fname):
             try:
                 paramsDict[section].update(paramHandler_v1[section](datum, params.get(section, datum).split(' ')))
             except KeyError:
-                raise KeyError('%s not a valid category. Valid categories are: %s' % (section, str(paramHandler_v1.keys())))
+                raise KeyError('%s not a valid category. Valid categories are: %s' % (section, str(list(paramHandler_v1.keys()))))
 
     paramsDict['Static AAs'] = [entry[1] for entry in paramsDict['Static Mods']]
     return paramsDict
@@ -1040,7 +1040,7 @@ def getUniquePeptides(proc_tag_graph, score_key='De Novo Score'):
             matching_pepts[context[0][2:-2]] += [context]
 
         if len(matching_pepts) > 1:
-            print('Multiple matching peptides found for de novo peptide %s: %s'%(proc_tag_graph[scanF]['De Novo Peptide'], matching_pepts.keys()))
+            print(('Multiple matching peptides found for de novo peptide %s: %s'%(proc_tag_graph[scanF]['De Novo Peptide'], list(matching_pepts.keys()))))
 
         for peptide in matching_pepts:
             element = copy.copy(proc_tag_graph[scanF])
@@ -1080,7 +1080,7 @@ def getUniquePeptidesFromEMResults(em_results_file, prob_cut = 0.5, default_prob
 
     # Do this after because not all elements for a given scan will have an associated score (if outputing all exact matches instead of top matches)
     if prob_cut != None:
-        for peptide in unique_peptides.keys():
+        for peptide in list(unique_peptides.keys()):
             unique_peptides[peptide]['scans'] = list(unique_peptides[peptide]['scans'])
             if float(unique_peptides[peptide]['representative']['EM Probability']) < prob_cut:
                 del unique_peptides[peptide]
@@ -1097,7 +1097,7 @@ def getDecoyStatus(prots):
         return 'No'
 
 def filterForExactsAndIsos(proc_tag_graph):
-    for scanF in proc_tag_graph.keys():
+    for scanF in list(proc_tag_graph.keys()):
         contexts = [context for context in proc_tag_graph[scanF]['Context'] if isIsobaricContext(context)]
         if len(contexts) > 0:
             proc_tag_graph[scanF]['Context'] = contexts
@@ -1135,7 +1135,7 @@ def preprocessDatabaseScanInfo(scanInfo, seqMap, fieldMap, scanNumKey='ScanF', s
                 raise IndexError
 
         info['Peptide'] = procSeq
-        for field in fieldMap.keys():
+        for field in list(fieldMap.keys()):
             info[fieldMap[field]] = scan[field]
 
         addToInfo = True

@@ -72,7 +72,7 @@ class ProbNetwork:
                 self._model = pickle.load(fin)
         else:
             self.initializeCounts()
-            print 'Entering training mode.'
+            print('Entering training mode.')
 
     def getIonIntensities(self, spec):
         nodes = nodeInfoGen(spec.seq)
@@ -114,14 +114,14 @@ class ProbNetwork:
         prob = 1
         #print Inds
         try:
-            for attr in self._model[dist].keys():
+            for attr in list(self._model[dist].keys()):
                 conds = self._config[dist]['model'][attr]
                 attrLoc = (Inds[attr],) + tuple(Inds[cond] for cond in conds)
                 prob *= self._model[dist][attr][attrLoc]
 
             return prob
         except AttributeError:
-            print 'No model loaded!'
+            print('No model loaded!')
             # Return 1 if distribution isn't in model
         except KeyError:
             return 1
@@ -138,16 +138,16 @@ class ProbNetwork:
 
     def initializeCounts(self):
         self._counts = {}
-        print self._config
+        print(self._config)
         for dist in self._dists:
             self._counts[dist] = {}
-            for attr in self._config[dist]['model'].keys():
+            for attr in list(self._config[dist]['model'].keys()):
                 if attr in self.ionRules:
                     shape = [self.binSizes['ion'](self)]
                 elif attr in self.paramRules:
                     shape = [self.binSizes[attr](self)]
                 else:
-                    raise ValueError('%s is not a valid model attribute. Try one of the following: %s' % (attr, self.binSizes.keys()))
+                    raise ValueError('%s is not a valid model attribute. Try one of the following: %s' % (attr, list(self.binSizes.keys())))
 
                 conds = self._config[dist]['model'][attr]
                 for cond in conds:
@@ -165,7 +165,7 @@ class ProbNetwork:
             for nodeInfo in nodes:
                 Inds = self.getInds(spec, nodeInfo, spec.pm, dist)
                 try:
-                    for attr in self._counts[dist].keys():
+                    for attr in list(self._counts[dist].keys()):
                         conds = self._config[dist]['model'][attr]
                         attrLoc = (Inds[attr],) + tuple(Inds[cond] for cond in conds)
                         self._counts[dist][attr][attrLoc] += 1
@@ -173,13 +173,13 @@ class ProbNetwork:
                     pass
 
         except AttributeError:
-            print 'No counts matrix detected. Not in training mode!'
+            print('No counts matrix detected. Not in training mode!')
 
     def getModelFromCounts(self, modelOut=None, comment=None):
         try:
             self._model = copy.deepcopy(self._counts)
             for dist in self._dists:
-                for attr in self._model[dist].keys():
+                for attr in list(self._model[dist].keys()):
                     total = 0
                     for i in range(self._model[dist][attr].shape[0]):
                         total += self._model[dist][attr][i]
@@ -197,7 +197,7 @@ class ProbNetwork:
                     pickle.dump(self._model, fout)
             return self._model
         except AttributeError:
-            print 'No counts matrix detected. Not in training mode!'
+            print('No counts matrix detected. Not in training mode!')
 
     def getModelHyperParameters(self):
         return self._model['hyper_parameters']
@@ -292,7 +292,7 @@ class ProbNetwork:
     def printIons(precMass, prm, NMod=0, CMod=0):
         PM = precMass - mods['H+'] - mods['H2O']
         for ion in ProbNetwork.ionRules:
-            print ion + ': ' + str(ProbNetwork.ionRules[ion](PM, prm, NMod, CMod))
+            print(ion + ': ' + str(ProbNetwork.ionRules[ion](PM, prm, NMod, CMod)))
 
 
 class Spectrum:
@@ -387,7 +387,7 @@ class Spectrum:
         if hasattr(self, 'seq'):
             self.probNet.addToCounts(self, dist)
         else:
-            print 'Must provide sequence to use for training!'
+            print('Must provide sequence to use for training!')
 
     def getPScore(self, revMap=None, ambigEdges=None):
         self.initializeNoiseModel()
@@ -400,7 +400,7 @@ class Spectrum:
                 else:
                     pScore += self.getNodeScore(prm=prm, formAA=self.seq[i], lattAA=self.seq[i + 1])
         else:
-            print 'Must provide sequence for scoring!'
+            print('Must provide sequence for scoring!')
             pScore = False
 
         return pScore
@@ -456,7 +456,7 @@ class Spectrum:
         intensity = self.getIntScore(mass)
         if window >= 0 and window < self.noiseModel.shape[0]:
             if self.noiseModel[window][intensity] == 0:
-                print mass, intensity, window
+                print(mass, intensity, window)
             return self.noiseModel[window][intensity]
         else:
             if intensity == 0:
@@ -541,9 +541,9 @@ class Spectrum:
             elif self._spec[intMass - 1][0] == peakInt:
                 return (intMass - 1, intMass)
             else:
-                print "ERROR: Spectrum improperly hashed!"
+                print("ERROR: Spectrum improperly hashed!")
         else:
-            print "No peak detected at position: ", intMass
+            print("No peak detected at position: ", intMass)
 
     def getBuckets(self, mass):
         hMass = self.hashMass(mass)
@@ -657,7 +657,7 @@ def getPRMLadder(seq, startMass, ambigAA='X', ambigEdges=None, epsilon=1, addEnd
 
     while True:
         try:
-            node = nodeGen.next()
+            node = next(nodeGen)
             PRMLadder.extend([node['prm']])
         except KeyError:
             if seq[seqIndex - 1] == ambigAA:
@@ -668,7 +668,7 @@ def getPRMLadder(seq, startMass, ambigAA='X', ambigEdges=None, epsilon=1, addEnd
                     PRMLadder.extend(getPRMLadder(seq=seq[seqIndex:], startMass=edge[1], ambigAA=ambigAA, ambigEdges=ambigEdges, epsilon=epsilon, addEnds=False))
                     break
                 else:
-                    print 'ERROR: Ambiguous edges do not correspond to ambiguous regions of sequence for PRM =', PRMLadder[-1] if len(PRMLadder) > 0 else startMass, 'and ambiguous edges', edge
+                    print('ERROR: Ambiguous edges do not correspond to ambiguous regions of sequence for PRM =', PRMLadder[-1] if len(PRMLadder) > 0 else startMass, 'and ambiguous edges', edge)
                     return False
             else:
                 raise ValueError('Unknown amino acid found %s' % node['lattAA'])
@@ -699,7 +699,7 @@ if __name__ == '__main__':
 
     """
     paramsDict = DataFile.parseParams('/home/arun/Documents/LADS_SILAC_Trypsin.ini')
-    print getPRMLadder('A', 0)
+    print(getPRMLadder('A', 0))
     """
     heavyPath = "C:\\Users\\Arun\\DropBox\\SpectraCorrelation\\244.3367.3367.1.dta"
     lightPath = "C:\\Users\\Arun\\DropBox\\SpectraCorrelation\\244.3383.3383.1.dta"

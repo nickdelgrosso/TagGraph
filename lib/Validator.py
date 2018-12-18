@@ -11,7 +11,7 @@ import StringFoldingWrapper as SFW
 import Constants
 import Database
 
-aaBrevs = set([aaInfo[0].lower() for aaInfo in Constants.aminoacids.values()])
+aaBrevs = set([aaInfo[0].lower() for aaInfo in list(Constants.aminoacids.values())])
 aaBrevs.add('xle')
 
 # Checks to see if mod is an amino acid substitution, we won't use these to expand plausible mod candidates
@@ -487,7 +487,7 @@ def getPriorProbabilities(indexed_taggraph_results, num_scans):
         item = indexed_taggraph_results[scanF][0]
         pos_prob_total += item[2][0]
 
-    print 'Prior', (pos_prob_total/num_scans, 1 - pos_prob_total/num_scans)
+    print('Prior', (pos_prob_total/num_scans, 1 - pos_prob_total/num_scans))
     return (pos_prob_total/num_scans, 1 - pos_prob_total/num_scans)
 
 # item[0][1], item[0][12]
@@ -584,7 +584,7 @@ def getSpectrumMatchParameters(indexed_taggraph_results, num_scans, prior_probs)
 def calculateSpectrumMatchProbabilities(indexed_taggraph_results, num_scans, prior_probs):
 
     pos_charge, pos_mean, pos_sigma, neg_charge, neg_mean, neg_sigma = getSpectrumMatchParametersMulti(indexed_taggraph_results, num_scans, prior_probs)
-    print 'charge pos', pos_charge, 'neg', neg_charge, 'gaussian', 'pos', pos_mean, pos_sigma, 'neg', neg_mean, neg_sigma
+    print('charge pos', pos_charge, 'neg', neg_charge, 'gaussian', 'pos', pos_mean, pos_sigma, 'neg', neg_mean, neg_sigma)
 
     pos_multi_pdf, neg_multi_pdf = {}, {}
     for charge in pos_charge:
@@ -890,7 +890,7 @@ def writeModels(outFileName, indexed_taggraph_results, cutOff=0.99, ep_step = 0.
     outFile.write('\nNUM MODS CONSIDERED %i\n\n'%len(mod_counts) )
     cols = ['Mod', 'Length', 'Over Cutoff (%f)'%cutOff, 'Over Cutoff Unique', 'Total', 'Unique', 'Average Error']
     outFile.write('\t'.join(cols) + '\n')
-    for mod in sorted(mod_counts.keys(), key= lambda k: -mod_counts[k]['Over Cutoff']):
+    for mod in sorted(list(mod_counts.keys()), key= lambda k: -mod_counts[k]['Over Cutoff']):
         if mod_counts[mod]['Over Cutoff'] == 0:
             break
         
@@ -954,7 +954,7 @@ def getMultivariateNormalPDF(mu, sigma):
 
     return prob_norm_calc
 
-def createInitialGuess(pos_mean=(5, 10), pos_sigma=(10, -5, -5, 100), neg_mean=(-2, 10), neg_sigma=(10, -5, -5, 100), match_lengths=range(1,40), match_models = False):
+def createInitialGuess(pos_mean=(5, 10), pos_sigma=(10, -5, -5, 100), neg_mean=(-2, 10), neg_sigma=(10, -5, -5, 100), match_lengths=list(range(1,40)), match_models = False):
     spec_match_models = (getMultivariateNormalPDF(pos_mean, pos_sigma), getMultivariateNormalPDF(neg_mean, neg_sigma))
 
     if not match_models:
@@ -1006,7 +1006,7 @@ def performEM(indexed_taggraph_results, initial_spectrum_match_models, initial_d
         curr_vec = np.array(curr_vec)
         dist = np.linalg.norm(prev_vec - curr_vec)
 
-        print 'Iteration %i, Distance %f'%(num_iterations, dist)
+        print('Iteration %i, Distance %f'%(num_iterations, dist))
 
     if write_data:
         writeModels(outBase + '_MODELS_BEFORERERANK.log', indexed_taggraph_results)
@@ -1038,7 +1038,7 @@ def performEM(indexed_taggraph_results, initial_spectrum_match_models, initial_d
             writeModels(outBase + '_MODELS_iter%i.log'%(num_iterations), indexed_taggraph_results)
             writeEMProbabilitiesOnlyProbs(outBase + '_EMProbs_iter%i.tdv'%(num_iterations), indexed_taggraph_results, spectrum_match_models, mod_models, context_models, db_match_models, protein_count_models, missed_cleavage_models, ppm_error_models, prior_probs, topOnly=True)
 
-        print 'Iteration %i, Distance %f'%(num_iterations, dist)
+        print('Iteration %i, Distance %f'%(num_iterations, dist))
 
     # Kludge, will probably remove this conditional after finishing cross-validation analysis
     if write_data or write_model_every_time:
@@ -1069,7 +1069,7 @@ def updateModContextWinCounts(top_item, items, mod_context_win_counts):
             mod_score_dict[item[0][4]] = max(mod_score_dict[item[0][4]], round(item[0][1], 2))
 
 
-    sorted_mods = sorted(mod_score_dict.items(), key = lambda k: -k[1])
+    sorted_mods = sorted(list(mod_score_dict.items()), key = lambda k: -k[1])
     if len(sorted_mods) > 0:
         max_score = sorted_mods[0][1]
         for mod, score in sorted_mods:
@@ -1124,32 +1124,32 @@ def rankMostPrevalentModOnTop(indexed_taggraph_results, min_log_score_diff = 1, 
         for i in range(1, len(items)):
             if items[i][0][2] != top_item_context or len(items[i][0][4]) != len(top_item_mods):
                 continue
-            print 'CANDIDATE', scanF, items[0][0][3], items[0][0][4], items[i][0][3], items[i][0][4]
+            print('CANDIDATE', scanF, items[0][0][3], items[0][0][4], items[i][0][3], items[i][0][4])
             if switchWithTop(items[0], items[i], mod_stats, mod_without_loc_counts, mod_context_win_counts, min_log_score_diff):
-                print 'SWITCHING'
+                print('SWITCHING')
                 items[i], items[0] = items[0], items[i]
 
         for i in range(1, len(items)):
             if items[i][0][2] != top_item_context or len(items[i][0][4]) == len(top_item_mods):
                 continue
-            print 'CANDIDATE', scanF, items[0][0][3], items[0][0][4], items[i][0][3], items[i][0][4]
+            print('CANDIDATE', scanF, items[0][0][3], items[0][0][4], items[i][0][3], items[i][0][4])
             if switchWithTop(items[0], items[i], mod_stats, mod_without_loc_counts, mod_context_win_counts, min_log_score_diff):
-                print 'SWITCHING'
+                print('SWITCHING')
                 items[i], items[0] = items[0], items[i]
 
         for i in range(1, len(items)):
             if items[i][0][2] == top_item_context:
                 continue
-            print 'CANDIDATE', scanF, items[0][0][3], items[0][0][4], items[i][0][3], items[i][0][4]
+            print('CANDIDATE', scanF, items[0][0][3], items[0][0][4], items[i][0][3], items[i][0][4])
             if switchWithTop(items[0], items[i], mod_stats, mod_without_loc_counts, mod_context_win_counts, min_log_score_diff):
-                print 'SWITCHING'
+                print('SWITCHING')
                 items[i], items[0] = items[0], items[i]
         
     if report_file and write_data:
         outFile = open(report_file, 'w')
         cols = ['Mod Tuple', 'Prob Sum', 'Total', 'Unique', 'Total Top', 'Prob Sum Top', 'Over 99', 'Unique Over 99', 'Over 99 Top', 'Unique Over 99 Top', 'Without Loc Counts']
         outFile.write('\t'.join(cols) + '\n')
-        for mod_tuple in sorted(mod_stats.keys(), key = lambda k: -len(mod_stats[k]['Unique Over 99']))[:10000]:
+        for mod_tuple in sorted(list(mod_stats.keys()), key = lambda k: -len(mod_stats[k]['Unique Over 99']))[:10000]:
             outFile.write('\t'.join([
                 str(mod_tuple),
                 str(mod_stats[mod_tuple]['Prob Sum']),
@@ -1197,7 +1197,7 @@ def switchWithTop(top_item, item, mod_stats, mod_without_loc_counts, mod_context
     # Sometimes a multiply modded pept outscores a singly modified peptide for the same scanF, even though all of the mods in the less modified peptide are also present in the more modified result. The less modified result is almost universally better. This occurs because multiply modified peptides get a boost if single modded counterparts are found elsewhere
     #print item[0][15], top_item[0][15], set(item[0][15]) in set(top_item[0][15])
     if len(top_item[0][4]) > len(item[0][4]) and set(item[0][15]).issubset(set(top_item[0][15])):
-        print 'Switching based on item being subset of top'
+        print('Switching based on item being subset of top')
         return True
 
     item_mods_only = tuple([mod for mod in item[0][4] if mod not in top_item[0][4]])
@@ -1221,52 +1221,52 @@ def switchWithTop(top_item, item, mod_stats, mod_without_loc_counts, mod_context
     # Only execute this code if unmod contexts are the same and the two items to compare have the same number of mods
     # Spectrum score is often not enough to overwhelm other scoring attributes in this case, so we give it a little 'help' (could also be wrong localization due to spurious peak matches, so we'll need to watch this to make sure it doesn't return junk 
     if item[0][2] == top_item[0][2]:
-        print 'entering same context switch'
+        print('entering same context switch')
         # Get minimum mod counts over all mods in the current item which are not in top item (normalizes for case when both top_item and item share a 'rare' mod such as GlycerylPE)
 
         # For mass error constraint, make sure that item mod error is less than mod error diff or that top item mod error is less than mod error diff
         # Also, mod class of item is 0 or 1 or mod class of top item is greater than 1
         # print item[0][11] < 2 or top_item[0][11] >= 2, len(item_mods_only) == 1 and len(top_item_mods_only) == 1, (top_item[0][8] == 'Indeterminate' or item[0][8] == 'Indeterminate' or abs(item[0][8]) < mod_error_diff or abs(top_item[0][8]) > mod_error_diff)
         if len(item_mods_only) == 1 and len(top_item_mods_only) == 1:
-            print 'Both mods counts one', top_item_mods_only, mod_context_win_counts[item[0][2]][top_item_mods_only], item_mods_only, mod_context_win_counts[item[0][2]][item_mods_only], sum(indiv_top_item_mod_counts), sum(indiv_item_mod_counts), min_mods_only_in_top_item_counts, min_mods_not_in_top_item_counts, top_item[0][10], item[0][10]
+            print('Both mods counts one', top_item_mods_only, mod_context_win_counts[item[0][2]][top_item_mods_only], item_mods_only, mod_context_win_counts[item[0][2]][item_mods_only], sum(indiv_top_item_mod_counts), sum(indiv_item_mod_counts), min_mods_only_in_top_item_counts, min_mods_not_in_top_item_counts, top_item[0][10], item[0][10])
             if (top_item[0][8] == 'Indeterminate' or item[0][8] == 'Indeterminate' or abs(item[0][8]) <= mod_error_diff or abs(top_item[0][8]) > mod_error_diff):
                 if mod_context_win_counts[item[0][2]][item_mods_only] - abs(round((min_mods_only_in_top_item_counts - min_mods_not_in_top_item_counts)/ratio_for_same_context_switch)) - 2*(item[0][10] - top_item[0][10]) > mod_context_win_counts[item[0][2]][top_item_mods_only] and (top_item[0][8] == 'Indeterminate' or (item[0][8] != 'Indeterminate' and abs(item[0][8]) <= abs(top_item[0][8])) ):
                     # Makes sure that the current mod isn't switched for a REALLY abundant one (i.e., Xle->Arg for Carbamyl, Insertion of G for Carbamidomethyl, etc.)
                     # Also add two to # of context wins required to switch for each missed cleavage more which is present in the item relative to the top item
-                    print 'Switching based on context win'
+                    print('Switching based on context win')
                     return True
 
                 if mod_context_win_counts[item[0][2]][item_mods_only] >= mod_context_win_counts[item[0][2]][top_item_mods_only]:
                     # Make sure that mod context win counts for item mod at least equals that for top mod even for prevalence based switching
                     if item_spec_score >= top_spec_score and sum(indiv_item_mod_counts) - min_unique_count_diff_to_switch >= sum(indiv_top_item_mod_counts):
-                        print 'Switching based on mod counts'
+                        print('Switching based on mod counts')
                         return True
 
                     # To distinguish Gly from carbamidomethyl, etc.
                     # Only when both items have same mod context
                     if item[0][3] == top_item[0][3] and item_spec_score >= top_spec_score and item_mods_only[0][1] == top_item_mods_only[0][1] and sum([ mod_without_loc_counts[mod[:2]] for mod in item[0][4] ]) > sum([ mod_without_loc_counts[mod[:2]] for mod in top_item[0][4] ]):
-                        print 'Switching based on mod without loc counts'
+                        print('Switching based on mod without loc counts')
                         return True
 
             return False
         elif item_spec_score >= top_spec_score and min_mods_not_in_top_item_counts >= min_unique_over_cut_same_context and sum(indiv_item_mod_counts)/len(indiv_item_mod_counts) > sum(indiv_top_item_mod_counts)/len(indiv_top_item_mod_counts):
-            print 'Switching based on average mod count greater', min_mods_not_in_top_item_counts >= min_unique_over_cut_same_context,  sum(indiv_item_mod_counts)/len(indiv_item_mod_counts) > sum(indiv_top_item_mod_counts)/len(indiv_top_item_mod_counts)
+            print('Switching based on average mod count greater', min_mods_not_in_top_item_counts >= min_unique_over_cut_same_context,  sum(indiv_item_mod_counts)/len(indiv_item_mod_counts) > sum(indiv_top_item_mod_counts)/len(indiv_top_item_mod_counts))
             # TODO: For comparing a more modified protein with a less modified protein, add constraint that spectrum score must be strictly greater or that number of single mods found is greater than 0?
             # For comparing multiply modded peptides, or peptides with different numbers of mods on same context
             return True
         elif len(item_mods_only) != 0 and len(top_item_mods_only) > len(item_mods_only) and item_spec_score >= top_spec_score and (min_mods_only_in_top_item_counts < min_unique_over_cut_same_context or min_mods_not_in_top_item_counts > min_mods_only_in_top_item_counts) and ( (len(item[0][4]) == 1 and top_item[1][3] == 0) or (len(item[0][4]) > 1 and item[1][3] >= top_item[1][3]) ):
             # For case when combo mod is on top and single mod is candidate for rerank. Want to be really careful here, but allow rerank if top combo mod is highly implausible (i.e., one of the mods in the combo is 'rare', or the item to rerank has more prevalent minumum mods than the top mod and no single mod from combo mod has been found at same context). Must also pass a spectrum score cutoff
-            print 'Switching based on top mod min less prevalent than cutoff or item mod', min_mods_only_in_top_item_counts < min_unique_over_cut_same_context or min_mods_not_in_top_item_counts > min_mods_only_in_top_item_counts, len(item[0][4]) == 1 and top_item[1][3] == 0, (len(item[0][4]) == 1 and top_item[1][3] == 0) or (len(item[0][4]) > 1 and item[1][3] >= top_item[1][3])
+            print('Switching based on top mod min less prevalent than cutoff or item mod', min_mods_only_in_top_item_counts < min_unique_over_cut_same_context or min_mods_not_in_top_item_counts > min_mods_only_in_top_item_counts, len(item[0][4]) == 1 and top_item[1][3] == 0, (len(item[0][4]) == 1 and top_item[1][3] == 0) or (len(item[0][4]) > 1 and item[1][3] >= top_item[1][3]))
             return True
             #elif len(top_item_mods_only) != 0 and len(item_mods_only) > len(top_item_mods_only) and min_mods_not_in_top_item_counts > min_unique_over_cut_same_context and ( (len(top_item[0][4]) == 1 and item[1][3] > 0) or item[1][3] > top_item[1][3] ):
             # For case when expanded combo mod is candidate for rerank and top_item has less mods, only rerank if all mods in combo mod are prevalent and more single mods have been found in context for item than top_item (different from above scenario as this does not require the spectrum score of the combo mod to be greater)
             #return True
         else:
-            print 'same context switch false'
+            print('same context switch false')
             return False
 
     
-    print 'entering diff context switch'
+    print('entering diff context switch')
     # Generic switching comparator based on number of unique hits with EM prob > 0.99 for mod, Only triggers in cases where above comparators fail to return (i.e., different contexts, no exact match, mods for one item not entirely contained in mods for the other item)
     # Only switches if context for one of the peptide candidates is within context for another peptide candidate (i.e., Succinyl vs Carbamyl at same 'site'), does not switch if contexts are on different proteins entirely
     more_prevalent = False
@@ -1279,7 +1279,7 @@ def switchWithTop(top_item, item, mod_stats, mod_without_loc_counts, mod_context
 
     # Comparing singly to doubly modded peptides sometimes has large differences in EM Prob. EM Probs have to be close here UNLESS top item has similar mass error to item or top item is multiply modified
     if same_context and more_prevalent and (top_item[2][1]-item[2][1] < min_log_score_diff or len(top_item[0][4]) > 1 or (item[0][8] != 'Indeterminate' and (top_item[0][8] == 'Indeterminate' or abs(top_item[0][8]) >= abs(item[0][8]))) ):
-        print 'Switching based on diff context more counts', len(mod_stats[item[0][4]]) >= min_unique_over_cut_generic and len(mod_stats[top_item[0][4]]['Unique Over 99 Top']) < len(mod_stats[item[0][4]]['Unique Over 99 Top']), len(top_item_mods_only) > 0 and min_mods_not_in_top_item_counts >= min_unique_over_cut_generic and min_mods_not_in_top_item_counts > min_mods_only_in_top_item_counts
+        print('Switching based on diff context more counts', len(mod_stats[item[0][4]]) >= min_unique_over_cut_generic and len(mod_stats[top_item[0][4]]['Unique Over 99 Top']) < len(mod_stats[item[0][4]]['Unique Over 99 Top']), len(top_item_mods_only) > 0 and min_mods_not_in_top_item_counts >= min_unique_over_cut_generic and min_mods_not_in_top_item_counts > min_mods_only_in_top_item_counts)
         return True
     else:
         return False
@@ -1297,7 +1297,7 @@ def getSensitivityAndPrecisionArrs(scoreArr, critArr, critCutOff=0.9, numPoints=
     trueScores = scoreArr[truePosInds]
     falseScores = np.delete(scoreArr, truePosInds)
 
-    print scoreArr
+    print(scoreArr)
     maxScore = np.amax(scoreArr)
     minScore = np.amin(scoreArr)
     scoreCutoffs = np.linspace(minScore, maxScore, num=numPoints)

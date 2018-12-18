@@ -154,10 +154,10 @@ def verifyEM(outputFolder):
 
 if __name__ == '__main__':
 	if (len(sys.argv)<2):
-		print " Error! \n Usage: python verifyEM.py [outputFolder]  \n"
-		print " eg: python verifyEM.py /lab/samba/shared/Users/Sarah/A375 \n"
+		print(" Error! \n Usage: python verifyEM.py [outputFolder]  \n")
+		print(" eg: python verifyEM.py /lab/samba/shared/Users/Sarah/A375 \n")
 		# python verifyEM.py /lab/samba/shared/Users/Sarah/A375
 		sys.exit(2)
 	outputFolder=sys.argv[1]
 	result=verifyEM(outputFolder)
-	print result
+	print(result)

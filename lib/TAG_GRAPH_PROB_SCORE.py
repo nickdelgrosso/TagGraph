@@ -9,7 +9,7 @@ import pickle
 import glob
 from collections import defaultdict, deque
 import itertools
-import anydbm
+import dbm
 import copy
 import math
 
@@ -36,12 +36,12 @@ inf = float("inf")
 def grabGreedyTags(diags):
     acceptedTagRegions = []
     for diag in diags:
-        diagX, diagY = zip(*diag)
+        diagX, diagY = list(zip(*diag))
         
         acceptTag = True
         for tag in acceptedTagRegions:
-            tagX, tagY = zip(*tag)
-            print (not set(tagX) & set(diagX)), (not set(tagY) & set(diagY))
+            tagX, tagY = list(zip(*tag))
+            print((not set(tagX) & set(diagX)), (not set(tagY) & set(diagY)))
             if set(tagX) & set(diagX) or set(tagY) & set(diagY):
                 acceptTag = False
 
@@ -68,7 +68,7 @@ def assembleSequenceTags(indicesDict):
     #print 'Diag Hash', diagHash
     #Break Apart non-contiguous diagonals
     diags = []
-    for diag in diagHash.values():
+    for diag in list(diagHash.values()):
         tempDiag = [diag.popleft()]
         while diag:
             pair = diag.popleft()
@@ -870,7 +870,7 @@ def scoreMatch(spec, charge, peptide, ambig_edges=[], mods=[], scanF = -1, no_sp
 
     if score == inf:
         # Happens sometimes when noise model returns 0 prob and spectrum model returns positive prob. Unknown why this occurs, must monitor
-        print "CRITICAL ERROR: Score of infinity returned for peptide %s with ambiguous edges %s in scan %i"%(peptide, str(ambig_edges), scanF)
+        print("CRITICAL ERROR: Score of infinity returned for peptide %s with ambiguous edges %s in scan %i"%(peptide, str(ambig_edges), scanF))
         return -10, pm
     else:
         return score/len(peptide), pm
@@ -906,7 +906,7 @@ def getMaxUniqueResults(candidates, write_data, prob_scores, pms, composite_scor
                 # fixes issue where protein localizations with same context but different extended sequences get split into two separate lines
                 mod_context_map[expanded_match[0]][4] |= set(write_data[j]['Proteins'])
 
-    return mod_context_map.values()
+    return list(mod_context_map.values())
 
 
 if __name__ == '__main__':
@@ -940,7 +940,7 @@ if __name__ == '__main__':
     if options.scans != None:
         filter_for_scans = True
         scans = set(eval(options.scans))
-        print 'Only sequencing scans', scans
+        print('Only sequencing scans', scans)
 
     exclude_scans = set()
     if options.excludescans != None:
@@ -969,7 +969,7 @@ if __name__ == '__main__':
     # Load positions of sequence seperators
     protein_names = []
     for seqnames_file in sorted(glob.glob(index_basename + '.seqnames*'), key = lambda k: int(os.path.splitext(k)[1][1:])):
-        protein_names += [anydbm.open(seqnames_file)]
+        protein_names += [dbm.open(seqnames_file)]
 
     with open(index_basename + '.offsets') as fin:
         protein_offsets = pickle.load(fin)
@@ -1038,7 +1038,7 @@ if __name__ == '__main__':
 
         if counts > options.maxcounts:
             # de novo peptide does not narrow down database candidates enough
-            print 'Counts exceed max counts for peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length)
+            print('Counts exceed max counts for peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length))
             num_skipped += 1
         elif match_length == pept_length:
             # Found exact match in sequence index
@@ -1059,7 +1059,7 @@ if __name__ == '__main__':
 
         elif counts > options.modmaxcounts:
             # de novo peptide does not narrow down database candidates enough for mod search
-            print 'Counts exceed mod max counts for inexact matching peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length)
+            print('Counts exceed mod max counts for inexact matching peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length))
             num_skipped += 1
         else:
 
@@ -1113,7 +1113,7 @@ if __name__ == '__main__':
                         try:
                             matches = alignDeNovoToDBSequence(de_novo_prmladder, de_novo_peptide, extended_sequence[1:-1], hashed_unimod_dict, unimod_dict, params_dict, deNovoAmbigEdges = ambig_edges, tagLength=tag_length, isobaricPenalty=0, defModPenalty=-1, inDelPenalty=-3, undefModPenalty=-3, defaultScore=0, modTolerance=options.modtolerance, align_to_length_ratio = MIN_ALIGN_TO_LENGTH_RATIO, cutOffDiff = cut_off_diff)
                         except TypeError:
-                            print 'CRITICAL ERROR: No matching tags found between de novo peptide %s and db peptide %s at location %i for scan number %s'%(de_novo_peptide, extended_sequence[1:-1], index_location, scanData['ScanF'])
+                            print('CRITICAL ERROR: No matching tags found between de novo peptide %s and db peptide %s at location %i for scan number %s'%(de_novo_peptide, extended_sequence[1:-1], index_location, scanData['ScanF']))
                             continue
                         
                         match_data += [(match, extended_sequence) for match in matches]
@@ -1130,7 +1130,7 @@ if __name__ == '__main__':
                 spec.initializeNoiseModel()
             else:
                 spec = False
-                print 'No corresponding dta file found for scan %i'%scanF
+                print('No corresponding dta file found for scan %i'%scanF)
 
             # Expand and score matches        
             # TODO: Check if this is way to write data is SLOW
@@ -1161,7 +1161,7 @@ if __name__ == '__main__':
                 match_candidates, mod_range = expandMatch(context[2:-2], match[1], match[0], de_novo_aas, diff_mod_map)
 
                 try:
-                    new_prob_scores, new_pms = zip(*[scoreMatch(spec, scanData['Charge'], candidate[0], candidate[1], candidate[2], scanF, no_spec_default_score = NO_SPEC_DEFAULT_SCORE) for candidate in match_candidates])
+                    new_prob_scores, new_pms = list(zip(*[scoreMatch(spec, scanData['Charge'], candidate[0], candidate[1], candidate[2], scanF, no_spec_default_score = NO_SPEC_DEFAULT_SCORE) for candidate in match_candidates]))
                 except ValueError:
                     # Occurs when zero match candidates are returned (i.e. putative mod annotation was invalid)
                     new_prob_scores, new_pms = [], []
@@ -1238,4 +1238,4 @@ if __name__ == '__main__':
                 
     outFile.close()
             
-    print 'Finished. Total Time Taken: %f. Num skipped due to matches exceeding max_counts: %i' % (time.time() - start_time, num_skipped)
+    print('Finished. Total Time Taken: %f. Num skipped due to matches exceeding max_counts: %i' % (time.time() - start_time, num_skipped))

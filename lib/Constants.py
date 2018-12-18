@@ -119,7 +119,7 @@ def hashUnimodModAAsEpsilonRange(unimodPeptDict, epStep = 0.0005, maxEp=0.08):
 
 def hashAAs(aas, epsilon):
     hashed = {}
-    for key in aas.keys():
+    for key in list(aas.keys()):
         try:
             newKey = np.round(aas[key][2] / epsilon)
         except TypeError:
@@ -166,13 +166,13 @@ def addStaticMod(datum, args):
     return {(datum, args[0]): args[1]}
 
 def addDiffMod(datum, args):
-    print(datum, args)
+    print((datum, args))
     try:
         symb = args[3]
     except IndexError:
         symb = None
         for modSymbol in diffModSymbols:
-            if modSymbol not in mods.keys():
+            if modSymbol not in list(mods.keys()):
                 symb = modSymbol
                 break
         if not symb:
@@ -207,7 +207,7 @@ def addDiffMod_v1(datum, args):  #
     except IndexError:
         symb = None
         for modSymbol in diffModSymbols:
-            if modSymbol not in mods.keys():
+            if modSymbol not in list(mods.keys()):
                 symb = modSymbol
                 break
         if not symb:
@@ -237,7 +237,7 @@ def addDiffMod_v1(datum, args):  #
 def getAA(mass, tolerance=.1):
     residual = tolerance
     aa = None
-    for aaKey in aminoacids.keys():
+    for aaKey in list(aminoacids.keys()):
         newResid = np.abs(aminoacids[aaKey][2] - mass)
         if newResid < residual:
             residual = newResid
@@ -248,7 +248,7 @@ def getAA(mass, tolerance=.1):
 def addAA(datum, args):
     try:
         aminoacids[args[0]]
-        raise ValueError("%s already exists in amino acid dictionary. Choose a character different than the following: %s" % (args[0], aminoacids.keys()))
+        raise ValueError("%s already exists in amino acid dictionary. Choose a character different than the following: %s" % (args[0], list(aminoacids.keys())))
     except KeyError:
         aminoacids[args[0]] = tuple([args[1], args[2], float(args[3]), float(args[4])])
         return {args[0]:  tuple(args[1:])}
@@ -283,11 +283,11 @@ def blindModPeptDFS(maxPolyPepMass, addModList, maxPolyPepLength = 3, seedList=N
                 queue.extend([((pept[0] + modEntry[0], pept[1] + modEntry[1]), peptMass + mass)])
 
 def peptDFS(mass, aminoacids=aminoacids):
-    queue = deque([(aaKey, aminoacids[aaKey][2]) for aaKey in aminoacids.keys()])
+    queue = deque([(aaKey, aminoacids[aaKey][2]) for aaKey in list(aminoacids.keys())])
     while queue:
         pept, peptMass = queue.pop()
         yield (pept, peptMass)
-        for aaKey in aminoacids.keys():
+        for aaKey in list(aminoacids.keys()):
             aaMass = aminoacids[aaKey][2]
             if (peptMass + aaMass <= mass):
                 queue.extend([(pept + aaKey, peptMass + aaMass)])
@@ -489,7 +489,7 @@ def nodeInfoGen(seq, startMass=0, aaDict=aminoacids, addTerminalNodes=False, con
 def getTermModHashForPairConfig(pairConfig):
     N = {}
     C = {}
-    for mod in mods.keys():
+    for mod in list(mods.keys()):
         for NMod in pairConfig['NStatic']:
             if np.abs(mods[mod] - NMod) < 0.001:
                 N[mod] = mods[mod]
@@ -502,9 +502,9 @@ def getTermModHashForPairConfig(pairConfig):
 def massLadder(seq, startMass=0):
     nodes = nodeInfoGen(seq, startMass)
     for node in nodes:
-        print('Prm: %f, AA: %s' % (node['prm'], node['formAA']))
+        print(('Prm: %f, AA: %s' % (node['prm'], node['formAA'])))
 
-    print('Prm: %f, AA: %s' % (node['prm'] + aminoacids[node['lattAA']][2], node['lattAA']))
+    print(('Prm: %f, AA: %s' % (node['prm'] + aminoacids[node['lattAA']][2], node['lattAA'])))
 
 # From LADS Analytics.py
 #Assumption-->all amino acids denoted by single letters^M
@@ -578,10 +578,10 @@ def getSharedPRMs(prmLadder1, prmLadder2, epsilon=0.5):
     pairedIonData = getPairedIons(hashTable, temp, delta=0.0, epsilon=epsilon)
     sharedPRMs = []
     for key in sorted(pairedIonData.keys()):
-        sharedPRMs += [zip(*pairedIonData[key])[1]]
+        sharedPRMs += [list(zip(*pairedIonData[key]))[1]]
 
     if sharedPRMs:
-        return zip(*sharedPRMs)[0]
+        return list(zip(*sharedPRMs))[0]
     else:
         return []
 
@@ -628,7 +628,7 @@ def getPairedIons(hashTable, spectra, delta, epsilon=0.02):
                 except KeyError:
                     pass
 
-    for mass in table.keys():
+    for mass in list(table.keys()):
         l = len(table[mass])
         if l < 2:
             del table[mass]
@@ -683,10 +683,10 @@ def preprocessSequence(seq, seqMap, replaceExistingTerminalMods=False, ambigAA='
 if __name__ == '__main__':
     aas = getPeptsOfMaxLength(3)
     for aa in aas:
-        print(aa, aas[aa])
-    print('length', len(aas))
+        print((aa, aas[aa]))
+    print(('length', len(aas)))
     aas = addPepsToAADict(300)
-    print(len(aas))
+    print((len(aas)))
 
 #    nodeGen = nodeInfoGen('AAAXGHYX', addTerminalNodes=True, considerTerminalMods=True, ambigEdges=[(10,20), (20,40)])
 #    for node in nodeGen:

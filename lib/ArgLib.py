@@ -48,7 +48,7 @@ def setupParams():
                 line = line.strip()
                 if "=" in line:
                     splitLine = line.split("=")
-                    if splitLine[0] in defaultVal.keys():
+                    if splitLine[0] in list(defaultVal.keys()):
                         defaultVal.update({splitLine[0]:splitLine[1]})
                     else:
                         defaultVal[splitLine[0]]=splitLine[1]
@@ -114,7 +114,7 @@ def parse(arglist, optArgs=[]):
 def parseInitFile(init, options):
     A=setupParams()
     paramsDict = DataFile.parseParams(init)
-    for param in paramsDict['Parameters'].keys():
+    for param in list(paramsDict['Parameters'].keys()):
         try:
             paramType = A[param]['attrs']['type']
             val = init['Parameters'][param]
@@ -129,6 +129,6 @@ def getProgDict(progs, options, progDict={}):
     for prog in progs:
         if hasattr(options, prog.lower()) and getattr(options, prog.lower()) != None:
             fDict = eval(getattr(options, prog.lower()))
-            for name in fDict.values():
+            for name in list(fDict.values()):
                 progDict[name] = prog
     return progDictogDict

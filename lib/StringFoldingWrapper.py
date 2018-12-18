@@ -1,5 +1,6 @@
 # Taken from http://www.mobify.com/blog/sqlalchemy-memory-magic/
 from pympler import summary, muppy
+import sys
 #import psutil
 
 class StringFolder(object):
@@ -23,7 +24,7 @@ class StringFolder(object):
         :return: a string or unicode object.
         """
         # If s is not a string or unicode object, return it unchanged
-        if not isinstance(s, basestring):
+        if not isinstance(s, str):
             return s
                                                     
         # If s is already a string, then str() has no effect.
@@ -31,7 +32,7 @@ class StringFolder(object):
         # If s is Unicode and can't be encoded as a string, this try
         # will raise a UnicodeEncodeError.
         try:
-            return intern(str(s))
+            return sys.intern(str(s))
         except UnicodeEncodeError:
             # Fall through and handle s as Unicode
             pass
@@ -54,7 +55,7 @@ def string_folding_wrapper(results):
     """
     # Get the list of keys so that we build tuples with all
     # the values in key order.
-    keys = results.keys()
+    keys = list(results.keys())
     for row in results:
         yield tuple( folder.fold_string(row[key]) for key in keys )
 

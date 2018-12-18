@@ -9,7 +9,7 @@ import pickle
 import glob
 from collections import defaultdict, deque
 
-import anydbm
+import dbm
 
 CUR_DIR = os.path.dirname(__file__)
 sys.path.insert(1, os.path.join(CUR_DIR,'fmindex'))
@@ -33,12 +33,12 @@ EXACT_MATCH_SCORE = 100
 def grabGreedyTags(diags):
     acceptedTagRegions = []
     for diag in diags:
-        diagX, diagY = zip(*diag)
+        diagX, diagY = list(zip(*diag))
         
         acceptTag = True
         for tag in acceptedTagRegions:
-            tagX, tagY = zip(*tag)
-            print (not set(tagX) & set(diagX)), (not set(tagY) & set(diagY))
+            tagX, tagY = list(zip(*tag))
+            print((not set(tagX) & set(diagX)), (not set(tagY) & set(diagY)))
             if set(tagX) & set(diagX) or set(tagY) & set(diagY):
                 acceptTag = False
 
@@ -63,7 +63,7 @@ def assembleSequenceTags(indicesDict):
     #print 'Diag Hash', diagHash
     #Break Apart non-contiguous diagonals
     diags = []
-    for diag in diagHash.values():
+    for diag in list(diagHash.values()):
         tempDiag = [diag.popleft()]
         while diag:
             pair = diag.popleft()
@@ -430,7 +430,7 @@ def resolveModification(hUnimodDict, unimodDict, deNovoMass, refMass, deNovoSeq,
         if modEntry[1] in unmodSeq:
             possUnmodMasses += [refMass - float(paramsDict['Static Mods'][modEntry])]
 
-    for modEntry in paramsDict['Diff Mods'].values():
+    for modEntry in list(paramsDict['Diff Mods'].values()):
         if modEntry[1] in unmodSeq or (term != None and modEntry[1].lower() == term.lower()):
             possUnmodMasses += [refMass + float(modEntry[2])]
             
@@ -603,7 +603,7 @@ if __name__ == '__main__':
     if options.scans != None:
         filter_for_scans = True
         scans = eval(options.scans)
-        print 'Only sequencing scans', scans
+        print('Only sequencing scans', scans)
 
     # Load mod annotation data(for de novo sequence results)
     params_dict = ArgLib.parseInitFile(options.init, options)
@@ -618,7 +618,7 @@ if __name__ == '__main__':
     # Load positions of sequence seperators
     protein_names = []
     for seqnames_file in sorted(glob.glob(index_basename + '.seqnames*')):
-        protein_names += [anydbm.open(seqnames_file)]
+        protein_names += [dbm.open(seqnames_file)]
 
     with open(index_basename + '.offsets') as fin:
         protein_offsets = pickle.load(fin)
@@ -679,7 +679,7 @@ if __name__ == '__main__':
 
         if counts > options.maxcounts:
             # de novo peptide does not narrow down database candidates enough
-            print 'Counts exceed max counts for peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length)
+            print('Counts exceed max counts for peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length))
             num_skipped += 1
         elif match_length == pept_length:
             # Found exact match in sequence index
@@ -701,7 +701,7 @@ if __name__ == '__main__':
 
         elif counts > options.modmaxcounts:
             # de novo peptide does not narrow down database candidates enough for mod search
-            print 'Counts exceed mod max counts for inexact matching peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length)
+            print('Counts exceed mod max counts for inexact matching peptide %s at scan number %s - counts: %i match length: %i '%(de_novo_peptide, scanData['ScanF'], counts, match_length))
             num_skipped += 1
         else:
 
@@ -760,4 +760,4 @@ if __name__ == '__main__':
 
     outFile.close()
             
-    print 'Finished. Total Time Taken: %f. Num skipped due to matches exceeding max_counts: %i' % (time.time() - start_time, num_skipped)
+    print('Finished. Total Time Taken: %f. Num skipped due to matches exceeding max_counts: %i' % (time.time() - start_time, num_skipped))

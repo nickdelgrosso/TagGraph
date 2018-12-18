@@ -23,7 +23,7 @@ if not os.path.basename(args.fasta.lower()).endswith('.fasta'):
 
 if args.output == '':
     output_filename = os.path.basename(args.fasta[:-6])
-    print('BLANK OUTPUT basename - using the FASTA input file  base: {}'.format(output_filename))
+    print(('BLANK OUTPUT basename - using the FASTA input file  base: {}'.format(output_filename)))
     args.output = output_filename
 
 
